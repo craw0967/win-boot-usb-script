@@ -2,7 +2,7 @@
 
 A shell script to create a bootable Windows USB installer. It is written for **POSIX `sh`** (no bashisms) and creates a USB drive that boots on both **UEFI** and **legacy BIOS** systems. It is **Linux-only** — see [Platform support](#platform-support).
 
-> **Note — "vibe coded":** This script was written largely with AI assistance, then reviewed, tested, and validated by a human. It is provided as-is; skim it before pointing it at a disk you care about.
+> **Note:** The aim of this project was to quickly create a script to do one job with a deliberately limited scope. To that end, this script was written largely with AI assistance, then reviewed and tested by a human. It is provided as-is; skim it before pointing it at a disk you care about.
 
 ## Why this exists
 
