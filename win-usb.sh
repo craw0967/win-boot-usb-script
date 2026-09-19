@@ -34,8 +34,9 @@ WIN11_URL="https://www.microsoft.com/en-us/software-download/windows11"
 
 # GPT layout created by partition_device():
 #   p1  NTFS data partition   all space minus the two boot partitions
-#   p2  EFI System (FAT32)    40 MiB, holds the UEFI:NTFS boot image
-#   p3  BIOS boot (EF02)      ~1 MiB, lets GRUB embed core.img on GPT
+#   p2  EFI System            40 MiB; FAT-formatted, then overwritten by the
+#                             UEFI:NTFS boot image (final FS is the image's FAT12)
+#   p3  BIOS boot (EF02)      ~2 MiB, lets GRUB embed core.img on GPT
 # p1 must stay first: Windows mounts only the first partition of removable
 # media.
 BOOT_PART_SIZE="+40M"
@@ -769,10 +770,8 @@ finish() {
     echo "  SUCCESS: Bootable Windows USB created on ${target_dev}."
     echo ""
     echo "  You can now plug the USB into your target machine and"
-    echo "  boot from it. You may need to:"
-    echo "    - Enable USB boot in BIOS/UEFI"
-    echo "    - Disable Secure Boot"
-    echo "    - Select the correct boot device"
+    echo "  boot from it. Depending on your firmware, you may need"
+    echo "  to enable USB boot and select the correct boot device."
     echo "================================================================"
 }
 

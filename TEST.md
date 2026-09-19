@@ -198,7 +198,7 @@ Simulated with a symlink-farm `PATH` built by the runner.
 | 9.6 | ISO root entry parity | Compare `ls -A` ISO root vs p1 | No ISO entry missing on p1 |
 | 9.7 | GRUB config | `p1/grub/grub.cfg` or `grub2/grub.cfg` | Contains `menuentry` and `ntldr /bootmgr` |
 | 9.8 | GRUB in MBR | `dd if=/dev/sde bs=512 count=1 \| strings \| grep -i grub` | MBR contains GRUB |
-| 9.9 | UEFI boot | 🙋 boot on UEFI, Secure Boot off | Windows installer starts |
+| 9.9 | UEFI boot | 🙋 boot on UEFI (note the Secure Boot setting) | Windows installer starts |
 | 9.10 | BIOS boot | 🙋 boot on legacy BIOS/CSM | GRUB menu → Windows installer |
 | 9.11 | UEFI bootloader on p2 | Mount p2, find `EFI/BOOT/BOOTX64.EFI` | Present (validates the UEFI path, not just the label) |
 | 9.12 | GRUB `core.img` in p3 | diskboot markers (`Geom`/`loading`) in p3 | Present (core images contain no literal `grub` strings) |

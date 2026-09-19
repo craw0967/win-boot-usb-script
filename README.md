@@ -2,6 +2,8 @@
 
 A shell script to create a bootable Windows USB installer. It is written for **POSIX `sh`** (no bashisms) and creates a USB drive that boots on both **UEFI** and **legacy BIOS** systems. It is **Linux-only** — see [Platform support](#platform-support).
 
+> **Note — "vibe coded":** This script was written largely with AI assistance, then reviewed, tested, and validated by a human. It is provided as-is; skim it before pointing it at a disk you care about.
+
 ## Why this exists
 
 Most tutorials recommend `dd` for Linux ISOs (which are hybrid ISOs), but Windows ISOs are **not** hybrid — they lack the MBR structures needed to boot from USB directly. Dedicated tools exist ([WoeUSB](https://github.com/WoeUSB/WoeUSB) — no longer actively maintained, [WoeUSB-ng](https://github.com/WoeUSB/WoeUSB-ng), [Ventoy](https://www.ventoy.net/en/)), but each has its own dependencies and complexity. This script is a lightweight shell alternative that automates an alternative, manual method end-to-end.
@@ -10,22 +12,24 @@ This script implements the method described in [Guillermo N. Leiro Arroyo's guid
 
 - A **GPT partition table** with three partitions
 - **NTFS** data partition (accessible in Windows for the installer files)
-- **FAT32** EFI System partition with **Rufus' UEFI-NTFS** image (for UEFI boot from NTFS)
+- An **EFI System** partition holding **Rufus' UEFI-NTFS** image (for UEFI boot from NTFS)
 - A **BIOS boot partition** plus **GRUB** installed to the MBR (for legacy BIOS boot)
 
 ## Partition layout
 
 | Partition | Size | Type | Purpose |
 |-----------|------|------|---------|
-| `p1` | remainder | Microsoft basic data (NTFS) | Windows installer files; first so Windows mounts it |
-| `p2` | 40 MiB | EFI System (FAT32) | Holds the Rufus `uefi-ntfs.img` UEFI bootloader |
-| `p3` | ~1 MiB | BIOS boot (`EF02`) | Lets GRUB embed `core.img` on GPT for BIOS boot |
+| `p1` | remainder (~ total − 42 MiB) | Microsoft basic data (NTFS) | Windows installer files; first so Windows mounts it |
+| `p2` | 40 MiB | EFI System | Holds the Rufus `uefi-ntfs.img` UEFI bootloader |
+| `p3` | ~2 MiB | BIOS boot (`EF02`) | Lets GRUB embed `core.img` on GPT for BIOS boot |
+
+> `p2` is formatted FAT32 during the run, then the Rufus image is written over it with `dd`. The resulting filesystem is the **image's own FAT12** (volume label `RUFUS_BOOT`), not FAT32; the partition *type* stays `EFI System`.
 
 ## Prerequisites
 
 - **Linux** (only) with a POSIX shell (`sh`) — see [Platform support](#platform-support)
 - **Root access** (`sudo`)
-- A **USB drive** (8 GB minimum recommended)
+- A **USB drive** large enough for the ISO — the script requires at least **ISO size + 128 MiB** (a typical Windows 11 ISO is ~5–6 GB, so an **8 GB** stick is usually sufficient)
 - A **Windows ISO** (download from [Microsoft](https://www.microsoft.com/en-us/software-download/windows11))
 
 ### Required tools
@@ -103,14 +107,14 @@ sudo ./win-usb.sh -y -i Win11_23H2.iso -d /dev/sde
 3. **Unmount** any mounted partitions on the target and verify they are really gone.
 4. **Partition** with GPT using `fdisk`:
    - Partition 1: Microsoft basic data (NTFS) — all space except the two boot partitions
-   - Partition 2: EFI System — 40 MiB FAT32 for the UEFI bootloader
-   - Partition 3: BIOS boot (`EF02`) — ~1 MiB for GRUB
+   - Partition 2: EFI System — 40 MiB for the UEFI bootloader
+   - Partition 3: BIOS boot (`EF02`) — ~2 MiB for GRUB
 5. **Format** NTFS on p1 and FAT32 on p2.
 6. **Copy** all Windows ISO contents to p1 (including hidden files).
 7. **Download** Rufus' `uefi-ntfs.img` — pinned to a specific upstream commit and verified by **SHA-256** — and **write** it to p2 via `dd`.
 8. **Install** GRUB (`i386-pc`) into p3/the MBR and write a `grub.cfg` that chain-loads `/bootmgr`, so legacy BIOS boots the Windows installer.
 
-The result is a single USB drive that boots on any system:
+The result is a single USB drive that boots on both UEFI and legacy BIOS systems:
 
 - **UEFI**: the firmware loads the UEFI-NTFS driver from the EFI System partition (p2), which can then read the Windows installer files from the NTFS partition (p1)
 - **BIOS**: GRUB boots from the BIOS boot partition/MBR and chain-loads the Windows bootloader from p1
